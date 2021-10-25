@@ -6,8 +6,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="SIE-Project" />
         <module name="DrollsKnowledgeBase" />
+        <module name="Sisteme-Inteligente-in-Economie" />
+        <module name="SIE-Project" />
         <module name="DroolsKieSession" />
       </profile>
     </annotationProcessing>
