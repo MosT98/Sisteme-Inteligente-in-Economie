@@ -1,0 +1,121 @@
+import com.sie.project.models.*;
+import com.sie.project.enums.*;
+import java.util.Arrays;
+import java.util.List;
+/*
+target audience
+1. In functie de intervalul de salariu - career status
+2. In functie de varsta - career status, monthly income
+social media profile
+3. In functie de nr de followeri -> alegi un min posts count per month
+4. In functie de platforma utilizata alegem un prefix la nume sau cv
+promoter
+
+promoted product
+5. in functie de platforma, afacem promovare la categorii diferite de produse
+6. daca expiration date e aroape de data curenta.. => discount mai mare
+7.
+
+- in functie de perioada campaniei facem reducere la anumite categorii de produse
+- 25-30 => 5%, reduceri diverse in functie de perioada lunii
+- formula pentru bugetul alocat in functie de kkturi
+- alegem un nr de promoteri in functie de nr de followeri
+-
+
+
+promoted product impl product
+*/
+
+// R1
+rule "Get career status by monthly income interval"
+    when
+        targetAudience:TargetAudience(monthlyIncomeInterval==MonthlyIncomeInterval.UNDER_1000)
+    then
+        targetAudience.setCareerStatus(CareerStatus.UNEMPLOYED);
+        System.out.println("Deoarece target audience are salariul lunar in intervalul "
+            + MonthlyIncomeInterval.UNDER_1000.getValue()
+            + " vom presupune ca statutul profesional este " + CareerStatus.UNEMPLOYED.getValue() + ".");
+end
+
+// R2
+rule "Get career status by age interval"
+    when
+        targetAudience:TargetAudience(ageInterval==AgeInterval.UNDER_18)
+    then
+        targetAudience.setCareerStatus(CareerStatus.UNEMPLOYED);
+        System.out.println("Deoarece target audience are varsta cuprinsa in intervalul "
+            + AgeInterval.UNDER_18.getValue()
+            + " vom presupune ca statutul profesional este " + CareerStatus.UNEMPLOYED.getValue() + ".");
+end
+
+// R3
+rule "Change minimum numbers of posts when number of followers is in certain interval"
+    when
+        socialMediaProfile:SocialMediaProfile(platform==SocialMediaPlatform.FACEBOOK)
+    then
+        Integer followersCount = socialMediaProfile.getFollowersCount();
+        if(followersCount < 100) {
+            socialMediaProfile.setMinimumPostsCountPerMonth(65);
+        }
+        else if(followersCount > 100 && followersCount < 1000) {
+            socialMediaProfile.setMinimumPostsCountPerMonth(45);
+        }
+        else if(followersCount > 1000) {
+            socialMediaProfile.setMinimumPostsCountPerMonth(30);
+        }
+        System.out.printf("Profilul %s de pe platforma %s are %s de urmaritori, deci va avea %s de postari lunar.%n",
+        socialMediaProfile.getName(), socialMediaProfile.getPlatform(), socialMediaProfile.getFollowersCount(), socialMediaProfile.getMinimumPostsCountPerMonth());
+end
+
+// R4
+rule "Change name depending on the media platform"
+    when
+        socialMediaProfile:SocialMediaProfile(platform==SocialMediaPlatform.INSTAGRAM)
+    then
+        var currentName = socialMediaProfile.getName();
+        var platform = socialMediaProfile.getPlatform();
+
+        if(platform.equals(SocialMediaPlatform.INSTAGRAM)) {
+            socialMediaProfile.setName("IG" + currentName);
+        }
+        else if(platform.equals(SocialMediaPlatform.FACEBOOK)) {
+            socialMediaProfile.setName("FB" + currentName);
+        }
+        else if(platform.equals(SocialMediaPlatform.TWITTER)) {
+            socialMediaProfile.setName("TW" + currentName);
+        }
+        else if(platform.equals(SocialMediaPlatform.TIKTOK)) {
+            socialMediaProfile.setName("TT" + currentName);
+        }
+
+        System.out.printf("Profilul %s este pe platforma %s, deci i se va actualiza numele la %s.%n",
+        currentName, socialMediaProfile.getPlatform(), socialMediaProfile.getName());
+end
+
+// R5 in functie de platforma, facem promovare la categorii diferite de produse
+rule "Promote different products depending on platform"
+    when
+        socialMediaProfile:SocialMediaProfile(platform == SocialMediaPlatform.INSTAGRAM)
+        promotedProduct:PromotedProduct(category == ProductCategory.UNKNOWN)
+        promoter:Promoter(socialMediaProfiles == List.of(socialMediaProfile))
+    then
+        var platform = socialMediaProfile.getPlatform();
+        if(platform.equals(SocialMediaPlatform.INSTAGRAM)) {
+            promotedProduct.setCategory(ProductCategory.FITNESS);
+            promoter.setPromotedProductList(List.of(promotedProduct));
+        }
+        else if(platform.equals(SocialMediaPlatform.FACEBOOK)) {
+            promotedProduct.setCategory(ProductCategory.COSMETIC);
+            promoter.setPromotedProductList(List.of(promotedProduct));
+        }
+        else if(platform.equals(SocialMediaPlatform.TWITTER)) {
+            promotedProduct.setCategory(ProductCategory.ELECTRONIC);
+            promoter.setPromotedProductList(List.of(promotedProduct));
+        }
+        else if(platform.equals(SocialMediaPlatform.TIKTOK)) {
+            promotedProduct.setCategory(ProductCategory.FASHION);
+            promoter.setPromotedProductList(List.of(promotedProduct));
+        }
+        System.out.printf("Profilul %s este pe platforma %s, deci se va promova categoria %s.%n",
+        socialMediaProfile.getName(), socialMediaProfile.getPlatform(), promotedProduct.getCategory());
+end

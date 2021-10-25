@@ -1,0 +1,32 @@
+import com.sie.lab.model.*;
+import com.sie.lab.enums.*;
+
+rule "Discount pentru clienti noi"
+	when
+		c:Client(tipClient==TipClient.NOU)
+		com:Comanda(client==c)
+	then
+		com.setDiscount(0.05);
+		System.out.println("Comanda are discount " + com.getDiscount() + ", valoarea dupa discount a comenzii este " + com.getValoareComanda());
+end
+
+rule "Discount pe articol de lux comandat"
+	when
+		c:Client(tipClient==TipClient.NOU)
+		com:Comanda(client==c)
+		p:Produs(tipProdus==TipProdus.LUX)
+		a:ArticolComanda(produs==p,comanda==com)
+	then
+		a.setDiscountPeArticol(0.03);
+	    System.out.println("Articolul are discount " + a.getDiscountPeArticol() + ", valoarea dupa discount a articolului este " + a.getValoareArticol());
+end
+
+rule "Discount pentru comanda in promotie"
+    when
+        c:Comanda()
+        p:Promotie(dataInceput.before(c.getDataComanda()), dataSfarsit.after(c.getDataComanda()))
+    then
+        ComandaInPromotie comandaInPromotie = new ComandaInPromotie(c, p);
+        insert(comandaInPromotie);
+        System.out.println(comandaInPromotie.getValoareComanda());
+ end
