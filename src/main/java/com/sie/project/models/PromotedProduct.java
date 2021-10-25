@@ -10,11 +10,27 @@ public class PromotedProduct {
     public ProductCategory category;
     public Double discount;
     public Instant expirationDate;
+    public String name;
 
-    public PromotedProduct(ProductCategory category, Double discount, Instant expirationDate) {
+    public PromotedProduct(ProductCategory category, Double discount, Instant expirationDate, String name) {
         this.category = category;
         this.discount = discount;
         this.expirationDate = expirationDate;
+        this.name = name;
+    }
+
+    public PromotedProduct(ProductCategory category, Instant expirationDate, String name) {
+        this.category = category;
+        this.expirationDate = expirationDate;
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public ProductCategory getCategory() {

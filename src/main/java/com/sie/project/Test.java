@@ -12,6 +12,7 @@ import org.kie.api.KieServices;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collections;
@@ -28,7 +29,7 @@ public class Test {
 //        TargetAudience targetAudience2 = new TargetAudience(AgeInterval.UNDER_18);
 //        SocialMediaProfile socialMediaProfile = new SocialMediaProfile(
 //                "PaginaFacebook", 215, 24, SocialMediaPlatform.FACEBOOK);
-//        var promotedProduct = new PromotedProduct(ProductCategory.UNKNOWN, 0.01, Instant.parse("2021-10-01T00:00:00.00Z"));
+        var promotedProduct = new PromotedProduct(ProductCategory.UNKNOWN, Instant.parse("2020-10-01T00:00:00.00Z"), "NumeProdusPromovat");
         SocialMediaProfile socialMediaProfile2 = new SocialMediaProfile(
                 "PaginaTest", 215, 24, SocialMediaPlatform.INSTAGRAM);
 //        var promoter = new Promoter(
@@ -42,12 +43,11 @@ public class Test {
 //        kSession.insert(targetAudience2);
 //        kSession.insert(socialMediaProfile);
 
-//        kSession.insert(promotedProduct);
-        kSession.insert(socialMediaProfile2);
+        kSession.insert(promotedProduct);
+//        kSession.insert(socialMediaProfile2);
 //        kSession.insert(promoter);
 
         kSession.fireAllRules();
-
 
     }
 }

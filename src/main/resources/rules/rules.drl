@@ -1,7 +1,11 @@
 import com.sie.project.models.*;
 import com.sie.project.enums.*;
 import java.util.Arrays;
-import java.util.List;
+import java.util.List
+import java.time.Instant
+import java.time.Duration
+import java.util.Date
+import java.text.SimpleDateFormat;
 /*
 target audience
 1. In functie de intervalul de salariu - career status
@@ -92,7 +96,7 @@ rule "Change name depending on the media platform"
         currentName, socialMediaProfile.getPlatform(), socialMediaProfile.getName());
 end
 
-// R5 in functie de platforma, facem promovare la categorii diferite de produse
+// R5
 rule "Promote different products depending on platform"
     when
         socialMediaProfile:SocialMediaProfile(platform == SocialMediaPlatform.INSTAGRAM)
@@ -119,3 +123,22 @@ rule "Promote different products depending on platform"
         System.out.printf("Profilul %s este pe platforma %s, deci se va promova categoria %s.%n",
         socialMediaProfile.getName(), socialMediaProfile.getPlatform(), promotedProduct.getCategory());
 end
+
+// R6 daca expiration date e aroape de data curenta.. => discount mai mare
+rule "If expiration date is in the next 30 days, increase discount by 25%"
+    when
+        promotedProduct:PromotedProduct();
+    then
+        Instant currentInstant = Instant.now();
+        Duration duration = Duration.between(promotedProduct.getExpirationDate(), currentInstant);
+        if (duration.toDays() <= 30) {
+            promotedProduct.setDiscount(0.25);
+        }
+        Date expirationDate = Date.from(promotedProduct.getExpirationDate());
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+
+        System.out.printf("Deoarece produsul %s are data expirarii %s, se va folosi un discount de 25 la suta.",
+        promotedProduct.getName(), formatter.format(expirationDate));
+end
+
+// R7
