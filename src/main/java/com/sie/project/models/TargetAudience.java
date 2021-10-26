@@ -18,6 +18,10 @@ public class TargetAudience {
         this.ageInterval = ageInterval;
     }
 
+    public TargetAudience(CareerStatus careerStatus) {
+        this.careerStatus = careerStatus;
+    }
+
     public CareerStatus getCareerStatus() {
         return careerStatus;
     }

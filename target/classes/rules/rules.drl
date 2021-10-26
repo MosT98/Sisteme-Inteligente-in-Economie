@@ -1,27 +1,16 @@
 import com.sie.project.models.*;
 import com.sie.project.enums.*;
 import java.util.Arrays;
-import java.util.List;
+import java.util.List
+import java.time.Instant
+import java.time.Duration
+import java.util.Date
+import java.text.SimpleDateFormat
+import java.time.ZoneId;
+
 /*
-target audience
-1. In functie de intervalul de salariu - career status
-2. In functie de varsta - career status, monthly income
-social media profile
-3. In functie de nr de followeri -> alegi un min posts count per month
-4. In functie de platforma utilizata alegem un prefix la nume sau cv
-promoter
-
-promoted product
-5. in functie de platforma, afacem promovare la categorii diferite de produse
-6. daca expiration date e aroape de data curenta.. => discount mai mare
-7.
-
-- in functie de perioada campaniei facem reducere la anumite categorii de produse
-- 25-30 => 5%, reduceri diverse in functie de perioada lunii
 - formula pentru bugetul alocat in functie de kkturi
-- alegem un nr de promoteri in functie de nr de followeri
--
-
+- in functie de perioada campanie/promovare...
 
 promoted product impl product
 */
@@ -31,6 +20,7 @@ rule "Get career status by monthly income interval"
     when
         targetAudience:TargetAudience(monthlyIncomeInterval==MonthlyIncomeInterval.UNDER_1000)
     then
+        System.out.println("=====RULE 1=====");
         targetAudience.setCareerStatus(CareerStatus.UNEMPLOYED);
         System.out.println("Deoarece target audience are salariul lunar in intervalul "
             + MonthlyIncomeInterval.UNDER_1000.getValue()
@@ -42,6 +32,7 @@ rule "Get career status by age interval"
     when
         targetAudience:TargetAudience(ageInterval==AgeInterval.UNDER_18)
     then
+        System.out.println("=====RULE 2=====");
         targetAudience.setCareerStatus(CareerStatus.UNEMPLOYED);
         System.out.println("Deoarece target audience are varsta cuprinsa in intervalul "
             + AgeInterval.UNDER_18.getValue()
@@ -53,6 +44,7 @@ rule "Change minimum numbers of posts when number of followers is in certain int
     when
         socialMediaProfile:SocialMediaProfile(platform==SocialMediaPlatform.FACEBOOK)
     then
+        System.out.println("=====RULE 3=====");
         Integer followersCount = socialMediaProfile.getFollowersCount();
         if(followersCount < 100) {
             socialMediaProfile.setMinimumPostsCountPerMonth(65);
@@ -72,6 +64,7 @@ rule "Change name depending on the media platform"
     when
         socialMediaProfile:SocialMediaProfile(platform==SocialMediaPlatform.INSTAGRAM)
     then
+        System.out.println("=====RULE 4=====");
         var currentName = socialMediaProfile.getName();
         var platform = socialMediaProfile.getPlatform();
 
@@ -92,13 +85,14 @@ rule "Change name depending on the media platform"
         currentName, socialMediaProfile.getPlatform(), socialMediaProfile.getName());
 end
 
-// R5 in functie de platforma, facem promovare la categorii diferite de produse
+// R5
 rule "Promote different products depending on platform"
     when
         socialMediaProfile:SocialMediaProfile(platform == SocialMediaPlatform.INSTAGRAM)
-        promotedProduct:PromotedProduct(category == ProductCategory.UNKNOWN)
+        promotedProduct:PromotedProduct(name == "NumeProdusPromovat")
         promoter:Promoter(socialMediaProfiles == List.of(socialMediaProfile))
     then
+        System.out.println("=====RULE 5=====");
         var platform = socialMediaProfile.getPlatform();
         if(platform.equals(SocialMediaPlatform.INSTAGRAM)) {
             promotedProduct.setCategory(ProductCategory.FITNESS);
@@ -118,4 +112,177 @@ rule "Promote different products depending on platform"
         }
         System.out.printf("Profilul %s este pe platforma %s, deci se va promova categoria %s.%n",
         socialMediaProfile.getName(), socialMediaProfile.getPlatform(), promotedProduct.getCategory());
+end
+
+// R6 daca expiration date e aroape de data curenta.. => discount mai mare
+rule "If expiration date is in the next 30 days, increase discount by 25%"
+    when
+        promotedProduct:PromotedProduct(name == "NumeProdusPromovat");
+    then
+        System.out.println("=====RULE 6=====");
+
+        var currentInstant = Instant.now();
+        var duration = Duration.between(currentInstant, promotedProduct.getExpirationDate());
+
+        if (duration.toDays() <= 30) {
+            promotedProduct.setDiscount(0.25);
+            Date expirationDate = Date.from(promotedProduct.getExpirationDate());
+            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+
+            System.out.printf("Deoarece produsul %s are data expirarii %s, se va folosi un discount de 25 la suta.%n",
+            promotedProduct.getName(), formatter.format(expirationDate));
+        }
+end
+
+// R7 - in functie de perioada campaniei facem reducere la anumite categorii de produse
+rule "Making promotions on different categories depending on the period of time"
+    when
+        socialMediaProfile:SocialMediaProfile(platform == SocialMediaPlatform.TWITTER)
+        promotedProduct:PromotedProduct(name == "Nutella")
+        promoter:Promoter(socialMediaProfiles == List.of(socialMediaProfile))
+    then
+        System.out.println("=====RULE 7=====");
+        var promotionStartDate = promoter.getPromotionStartDate();
+        var promotionEndDate = promoter.getPromotionEndDate();
+
+        var christmasStartDate = Instant.parse("2021-12-25T00:00:00.00Z");
+        var christmasEndDate = Instant.parse("2022-01-01T00:00:00.00Z");
+
+        var summerSaleStartDate = Instant.parse("2021-06-01T00:00:00.00Z");
+        var summerSaleEndDate = Instant.parse("2021-07-01T00:00:00.00Z");
+
+        if (promotionStartDate.isAfter(christmasStartDate) && promotionEndDate.isBefore(christmasEndDate)){
+            promotedProduct.setCategory(ProductCategory.COSMETIC);
+            promotedProduct.setDiscount(0.30);
+        }
+        else if (promotionStartDate.isAfter(summerSaleStartDate) && promotionEndDate.isBefore(summerSaleEndDate)){
+            promotedProduct.setCategory(ProductCategory.ELECTRONIC);
+            promotedProduct.setDiscount(0.15);
+        }
+
+        Date formattedStartDate = Date.from(promotionStartDate);
+        Date formattedEndDate = Date.from(promotionEndDate);
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+
+        System.out.printf("Deoarece campania este in perioada %s - %s, produsele din categoria %s vor beneficia de un discount de %.1f la suta.%n",
+        formatter.format(formattedStartDate), formatter.format(formattedEndDate), promotedProduct.getCategory(), promotedProduct.getDiscount() * 100);
+end
+
+
+// R8 updatam numele cand este expirat -> for future actions
+rule "Update name of a product if expiration date is exceeded"
+    when
+        promotedProduct:PromotedProduct(expirationDate == Instant.parse("2021-10-23T00:00:00.00Z"));
+    then
+        System.out.println("=====RULE 8=====");
+
+        var currentName = promotedProduct.getName();
+
+        var currentInstant = Instant.now();
+        var currentExpirationDate = promotedProduct.getExpirationDate();
+
+        Date formattedExpirationDate = Date.from(currentExpirationDate);
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+
+        if (currentExpirationDate.isBefore(currentInstant)){
+            promotedProduct.setName("EXPIRAT(" + formatter.format(formattedExpirationDate) +") " + currentName);
+        }
+
+        System.out.printf("Deoarece produsul %s este expirat din data %s, i se va actualiza numele la %s.%n",
+        currentName, formatter.format(formattedExpirationDate), promotedProduct.getName());
+end
+
+// R9 reduceri in functie de perioada lunii cand incepe promotia
+rule "Different discounts based on the period of the month"
+    when
+        promotedProduct:PromotedProduct(name == "ProdusNou")
+        promoter:Promoter(promotedProductList == List.of(promotedProduct))
+    then
+        System.out.println("=====RULE 9=====");
+
+        var promotionStartDate = promoter.getPromotionStartDate();
+        var dayFromPromotionStartDate = promotionStartDate.atZone(ZoneId.systemDefault()).getDayOfMonth();
+
+        var firstInterval = Instant.parse("2021-01-01T00:00:00.00Z").atZone(ZoneId.systemDefault()).getDayOfMonth();
+        var secondInterval = Instant.parse("2021-01-10T00:00:00.00Z").atZone(ZoneId.systemDefault()).getDayOfMonth();
+        var thirdInterval = Instant.parse("2021-01-20T00:00:00.00Z").atZone(ZoneId.systemDefault()).getDayOfMonth();
+
+        if (dayFromPromotionStartDate >= firstInterval && dayFromPromotionStartDate <= secondInterval){
+            promotedProduct.setDiscount(0.12);
+        }else if(dayFromPromotionStartDate >= secondInterval && dayFromPromotionStartDate <= thirdInterval){
+            promotedProduct.setDiscount(0.20);
+        }else {
+            promotedProduct.setDiscount(0.35);
+        }
+
+        System.out.printf("Deoarece promotia incepe in ziua %d din luna, produsul cu numele %s va fi redus cu %.1f la suta.%n",
+        dayFromPromotionStartDate, promotedProduct.getName(), promotedProduct.getDiscount() * 100);
+end
+
+// R10 daca e student -> reduceri mai mari
+rule "If student, receive bigger discount"
+    when
+        targetAudience:TargetAudience(careerStatus == CareerStatus.STUDENT)
+        promotedProduct:PromotedProduct(name == "Laptop")
+        marketingStrategy:MarketingStrategy(targetAudience == targetAudience)
+    then
+        System.out.println("=====RULE 10=====");
+
+        if (targetAudience.getCareerStatus().equals(CareerStatus.STUDENT)){
+            promotedProduct.setDiscount(0.15);
+            System.out.printf("Produsul cu numele %s va fi redus cu %.1f la suta pentru categoria %s.%n",
+            promotedProduct.getName(), promotedProduct.getDiscount() * 100, targetAudience.getCareerStatus());
+        }
+end
+
+// R11 daca e sub o anumita varsta -> reduceri mai mari
+rule "If under 18, receive bigger discount"
+    when
+        targetAudience:TargetAudience(ageInterval == AgeInterval.UNDER_18)
+        promotedProduct:PromotedProduct(name == "Smartphone")
+        marketingStrategy:MarketingStrategy(targetAudience == targetAudience)
+    then
+        System.out.println("=====RULE 11=====");
+
+        if (targetAudience.getAgeInterval().equals(AgeInterval.UNDER_18)){
+            promotedProduct.setDiscount(0.20);
+            System.out.printf("Produsul cu numele %s va fi redus cu %.1f la suta pentru persoanele sub 18 ani.%n",
+            promotedProduct.getName(), promotedProduct.getDiscount() * 100);
+        }
+end
+
+// R12 in functie de nr de followeri -> nr de promoteri
+rule "Depending on the number of followers, set maximum number of promoters"
+    when
+        socialMediaProfile:SocialMediaProfile(followersCount == 15000, platform == SocialMediaPlatform.TWITTER)
+        marketingStrategy:MarketingStrategy(socialMediaProfiles == List.of(socialMediaProfile))
+    then
+        System.out.println("=====RULE 12=====");
+
+        var currentFollowersNumber = socialMediaProfile.getFollowersCount();
+        var neededNumberOfPromoters = currentFollowersNumber / 2500; // <- for each 2500 followers we add another promoter
+
+        System.out.printf("Tinand cont ca avem %d de followeri pe platforma %s, avem nevoie de %d promoteri.%n",
+        currentFollowersNumber, socialMediaProfile.getPlatform(), neededNumberOfPromoters);
+end
+
+// R13 in functie de platforma -> perioada maxima campanie -> TBD
+rule "Depending on the social platform, set the period of campaign"
+    when
+        socialMediaProfile:SocialMediaProfile(platform == SocialMediaPlatform.TIKTOK)
+        marketingStrategy:MarketingStrategy(socialMediaProfiles == List.of(socialMediaProfile))
+    then
+        System.out.println("=====RULE 13=====");
+
+        if (socialMediaProfile.getPlatform().equals(SocialMediaPlatform.TIKTOK)){
+            marketingStrategy.setCampaignStartDate(Instant.parse("2022-01-01T00:00:00.00Z"));
+            marketingStrategy.setCampaignEndDate(Instant.parse("2022-03-01T00:00:00.00Z"));
+        }
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+
+        System.out.printf("Deoarece platforma aleasa este %s, perioada campaniei va fi: %s - %s.%n",
+        socialMediaProfile.getPlatform(),
+        formatter.format(Date.from(marketingStrategy.getCampaignStartDate())),
+        formatter.format(Date.from(marketingStrategy.getCampaignEndDate())));
 end

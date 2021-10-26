@@ -5,28 +5,12 @@ import java.util.List
 import java.time.Instant
 import java.time.Duration
 import java.util.Date
-import java.text.SimpleDateFormat;
+import java.text.SimpleDateFormat
+import java.time.ZoneId;
 
 /*
-target audience
-1. In functie de intervalul de salariu - career status
-2. In functie de varsta - career status, monthly income
-social media profile
-3. In functie de nr de followeri -> alegi un min posts count per month
-4. In functie de platforma utilizata alegem un prefix la nume sau cv
-promoter
-
-promoted product
-5. in functie de platforma, afacem promovare la categorii diferite de produse
-6. daca expiration date e aroape de data curenta.. => discount mai mare
-7.
-
-- in functie de perioada campaniei facem reducere la anumite categorii de produse
-- 25-30 => 5%, reduceri diverse in functie de perioada lunii
 - formula pentru bugetul alocat in functie de kkturi
-- alegem un nr de promoteri in functie de nr de followeri
--
-
+- in functie de perioada campanie/promovare...
 
 promoted product impl product
 */
@@ -206,4 +190,99 @@ rule "Update name of a product if expiration date is exceeded"
 
         System.out.printf("Deoarece produsul %s este expirat din data %s, i se va actualiza numele la %s.%n",
         currentName, formatter.format(formattedExpirationDate), promotedProduct.getName());
+end
+
+// R9 reduceri in functie de perioada lunii cand incepe promotia
+rule "Different discounts based on the period of the month"
+    when
+        promotedProduct:PromotedProduct(name == "ProdusNou")
+        promoter:Promoter(promotedProductList == List.of(promotedProduct))
+    then
+        System.out.println("=====RULE 9=====");
+
+        var promotionStartDate = promoter.getPromotionStartDate();
+        var dayFromPromotionStartDate = promotionStartDate.atZone(ZoneId.systemDefault()).getDayOfMonth();
+
+        var firstInterval = Instant.parse("2021-01-01T00:00:00.00Z").atZone(ZoneId.systemDefault()).getDayOfMonth();
+        var secondInterval = Instant.parse("2021-01-10T00:00:00.00Z").atZone(ZoneId.systemDefault()).getDayOfMonth();
+        var thirdInterval = Instant.parse("2021-01-20T00:00:00.00Z").atZone(ZoneId.systemDefault()).getDayOfMonth();
+
+        if (dayFromPromotionStartDate >= firstInterval && dayFromPromotionStartDate <= secondInterval){
+            promotedProduct.setDiscount(0.12);
+        }else if(dayFromPromotionStartDate >= secondInterval && dayFromPromotionStartDate <= thirdInterval){
+            promotedProduct.setDiscount(0.20);
+        }else {
+            promotedProduct.setDiscount(0.35);
+        }
+
+        System.out.printf("Deoarece promotia incepe in ziua %d din luna, produsul cu numele %s va fi redus cu %.1f la suta.%n",
+        dayFromPromotionStartDate, promotedProduct.getName(), promotedProduct.getDiscount() * 100);
+end
+
+// R10 daca e student -> reduceri mai mari
+rule "If student, receive bigger discount"
+    when
+        targetAudience:TargetAudience(careerStatus == CareerStatus.STUDENT)
+        promotedProduct:PromotedProduct(name == "Laptop")
+        marketingStrategy:MarketingStrategy(targetAudience == targetAudience)
+    then
+        System.out.println("=====RULE 10=====");
+
+        if (targetAudience.getCareerStatus().equals(CareerStatus.STUDENT)){
+            promotedProduct.setDiscount(0.15);
+            System.out.printf("Produsul cu numele %s va fi redus cu %.1f la suta pentru categoria %s.%n",
+            promotedProduct.getName(), promotedProduct.getDiscount() * 100, targetAudience.getCareerStatus());
+        }
+end
+
+// R11 daca e sub o anumita varsta -> reduceri mai mari
+rule "If under 18, receive bigger discount"
+    when
+        targetAudience:TargetAudience(ageInterval == AgeInterval.UNDER_18)
+        promotedProduct:PromotedProduct(name == "Smartphone")
+        marketingStrategy:MarketingStrategy(targetAudience == targetAudience)
+    then
+        System.out.println("=====RULE 11=====");
+
+        if (targetAudience.getAgeInterval().equals(AgeInterval.UNDER_18)){
+            promotedProduct.setDiscount(0.20);
+            System.out.printf("Produsul cu numele %s va fi redus cu %.1f la suta pentru persoanele sub 18 ani.%n",
+            promotedProduct.getName(), promotedProduct.getDiscount() * 100);
+        }
+end
+
+// R12 in functie de nr de followeri -> nr de promoteri
+rule "Depending on the number of followers, set maximum number of promoters"
+    when
+        socialMediaProfile:SocialMediaProfile(followersCount == 15000, platform == SocialMediaPlatform.TWITTER)
+        marketingStrategy:MarketingStrategy(socialMediaProfiles == List.of(socialMediaProfile))
+    then
+        System.out.println("=====RULE 12=====");
+
+        var currentFollowersNumber = socialMediaProfile.getFollowersCount();
+        var neededNumberOfPromoters = currentFollowersNumber / 2500; // <- for each 2500 followers we add another promoter
+
+        System.out.printf("Tinand cont ca avem %d de followeri pe platforma %s, avem nevoie de %d promoteri.%n",
+        currentFollowersNumber, socialMediaProfile.getPlatform(), neededNumberOfPromoters);
+end
+
+// R13 in functie de platforma -> perioada maxima campanie -> TBD
+rule "Depending on the social platform, set the period of campaign"
+    when
+        socialMediaProfile:SocialMediaProfile(platform == SocialMediaPlatform.TIKTOK)
+        marketingStrategy:MarketingStrategy(socialMediaProfiles == List.of(socialMediaProfile))
+    then
+        System.out.println("=====RULE 13=====");
+
+        if (socialMediaProfile.getPlatform().equals(SocialMediaPlatform.TIKTOK)){
+            marketingStrategy.setCampaignStartDate(Instant.parse("2022-01-01T00:00:00.00Z"));
+            marketingStrategy.setCampaignEndDate(Instant.parse("2022-03-01T00:00:00.00Z"));
+        }
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+
+        System.out.printf("Deoarece platforma aleasa este %s, perioada campaniei va fi: %s - %s.%n",
+        socialMediaProfile.getPlatform(),
+        formatter.format(Date.from(marketingStrategy.getCampaignStartDate())),
+        formatter.format(Date.from(marketingStrategy.getCampaignEndDate())));
 end
