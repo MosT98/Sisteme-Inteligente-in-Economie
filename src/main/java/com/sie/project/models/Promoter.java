@@ -12,6 +12,10 @@ public class Promoter {
     private Instant promotionStartDate;
     private Instant promotionEndDate;
 
+    public Promoter(String name) {
+        this.name = name;
+    }
+
     public Promoter(List<SocialMediaProfile> socialMediaProfiles) {
         this.socialMediaProfiles = socialMediaProfiles;
     }

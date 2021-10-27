@@ -11,7 +11,7 @@ public class MarketingStrategy {
     private List<SocialMediaProfile> socialMediaProfiles;
     private List<Promoter> promoters;
     private TargetAudience targetAudience;
-
+    private Integer numberOfGiveaways;
     private Integer maximumNumberOfPromoters;
 
     public MarketingStrategy(Integer allocatedBudget, Instant campaignStartDate, Instant campaignEndDate) {
@@ -20,17 +20,28 @@ public class MarketingStrategy {
         this.campaignEndDate = campaignEndDate;
     }
 
+    public MarketingStrategy(TargetAudience targetAudience, Instant campaignStartDate, Instant campaignEndDate) {
+        this.campaignStartDate = campaignStartDate;
+        this.campaignEndDate = campaignEndDate;
+        this.targetAudience = targetAudience;
+    }
+
     public MarketingStrategy(Integer allocatedBudget, TargetAudience targetAudience) {
         this.allocatedBudget = allocatedBudget;
         this.targetAudience = targetAudience;
     }
 
-    public MarketingStrategy(TargetAudience targetAudience) {
-        this.targetAudience = targetAudience;
-    }
-
     public MarketingStrategy(List<SocialMediaProfile> socialMediaProfiles) {
         this.socialMediaProfiles = socialMediaProfiles;
+    }
+
+    public MarketingStrategy(Integer allocatedBudget, List<Promoter> promoters) {
+        this.allocatedBudget = allocatedBudget;
+        this.promoters = promoters;
+    }
+
+    public MarketingStrategy(TargetAudience targetAudience) {
+        this.targetAudience = targetAudience;
     }
 
     public MarketingStrategy(
@@ -105,6 +116,14 @@ public class MarketingStrategy {
 
     public void setMaximumNumberOfPromoters(Integer maximumNumberOfPromoters) {
         this.maximumNumberOfPromoters = maximumNumberOfPromoters;
+    }
+
+    public Integer getNumberOfGiveaways() {
+        return numberOfGiveaways;
+    }
+
+    public void setNumberOfGiveaways(Integer numberOfGiveaways) {
+        this.numberOfGiveaways = numberOfGiveaways;
     }
 }
 
