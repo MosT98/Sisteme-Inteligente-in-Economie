@@ -10,14 +10,16 @@ public class SocialMediaProfile {
     private Integer minimumPostsCountPerMonth = 10;
     private SocialMediaPlatform platform;
 
+
+
+    public SocialMediaProfile(SocialMediaPlatform platform) {
+        this.platform = platform;
+    }
+
     public SocialMediaProfile(String name, Integer followersCount, Integer postsCount, SocialMediaPlatform platform) {
         this.name = name;
         this.followersCount = followersCount;
         this.totalPostsCount = postsCount;
-        this.platform = platform;
-    }
-
-    public SocialMediaProfile(SocialMediaPlatform platform) {
         this.platform = platform;
     }
 

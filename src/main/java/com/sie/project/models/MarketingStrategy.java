@@ -14,6 +14,14 @@ public class MarketingStrategy {
 
     private Integer maximumNumberOfPromoters;
 
+    public MarketingStrategy(TargetAudience targetAudience) {
+        this.targetAudience = targetAudience;
+    }
+
+    public MarketingStrategy(List<SocialMediaProfile> socialMediaProfiles) {
+        this.socialMediaProfiles = socialMediaProfiles;
+    }
+
     public MarketingStrategy(
             Integer allocatedBudget,
             Instant campaignStartDate,

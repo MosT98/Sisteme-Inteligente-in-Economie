@@ -25,9 +25,9 @@ public class Test {
 
         var promotedProduct = new PromotedProduct(ProductCategory.UNKNOWN, Instant.parse("2021-11-20T00:00:00.00Z"), "NumeProdusPromovat");
         var promotedProduct2 = new PromotedProduct(ProductCategory.UNKNOWN, Instant.parse("2021-10-23T00:00:00.00Z"), "Nutella");
-        var promotedProduct3 = new PromotedProduct(ProductCategory.UNKNOWN, Instant.parse("2021-10-25T00:00:00.00Z"), "ProdusNou");
-        var promotedProduct4 = new PromotedProduct(ProductCategory.UNKNOWN, Instant.parse("2021-10-30T00:00:00.00Z"), "Laptop");
-        var promotedProduct5 = new PromotedProduct(ProductCategory.UNKNOWN, Instant.parse("2021-10-30T00:00:00.00Z"), "Smartphone");
+        var promotedProduct3 = new PromotedProduct("ProdusNou");
+        var promotedProduct4 = new PromotedProduct("Laptop");
+        var promotedProduct5 = new PromotedProduct("Smartphone");
 
         var socialMediaProfile = new SocialMediaProfile("PaginaTest", 215, 24, SocialMediaPlatform.FACEBOOK);
         var socialMediaProfile2 = new SocialMediaProfile("PaginaTest1", 200, 20, SocialMediaPlatform.INSTAGRAM);
@@ -35,12 +35,7 @@ public class Test {
         var socialMediaProfile4 = new SocialMediaProfile("PaginaTwitter", 15000, 20, SocialMediaPlatform.TWITTER);
         var socialMediaProfile5 = new SocialMediaProfile("PaginaTwitter", 15000, 20, SocialMediaPlatform.TIKTOK);
 
-        var promoter = new Promoter(
-                "Cosmin",
-                List.of(promotedProduct2),
-                List.of(socialMediaProfile2),
-                Instant.parse("2021-10-26T00:00:00.00Z"),
-                Instant.parse("2021-10-30T00:00:00.00Z"));
+        var promoter = new Promoter(List.of(socialMediaProfile2));
         var promoter2 = new Promoter(
                 "AAAA",
                 List.of(promotedProduct2),
@@ -54,38 +49,10 @@ public class Test {
                 Instant.parse("2021-12-05T00:00:00.00Z"),
                 Instant.parse("2021-12-30T00:00:00.00Z"));
 
-        var marketingStrategy = new MarketingStrategy(
-                1500,
-                Instant.parse("2021-12-05T00:00:00.00Z"),
-                Instant.parse("2021-12-30T00:00:00.00Z"),
-                Collections.emptyList(),
-                Collections.emptyList(),
-                targetAudience2,
-                3);
-        var marketingStrategy2 = new MarketingStrategy(
-                1500,
-                Instant.parse("2021-12-05T00:00:00.00Z"),
-                Instant.parse("2021-12-30T00:00:00.00Z"),
-                Collections.emptyList(),
-                Collections.emptyList(),
-                targetAudience3,
-                3);
-        var marketingStrategy3 = new MarketingStrategy(
-                1500,
-                Instant.parse("2021-12-05T00:00:00.00Z"),
-                Instant.parse("2021-12-30T00:00:00.00Z"),
-                List.of(socialMediaProfile4),
-                Collections.emptyList(),
-                null,
-                0);
-        var marketingStrategy4 = new MarketingStrategy(
-                1500,
-                Instant.parse("2021-12-05T00:00:00.00Z"),
-                Instant.parse("2021-12-30T00:00:00.00Z"),
-                List.of(socialMediaProfile5),
-                Collections.emptyList(),
-                null,
-                0);
+        var marketingStrategy = new MarketingStrategy(targetAudience2);
+        var marketingStrategy2 = new MarketingStrategy(targetAudience3);
+        var marketingStrategy3 = new MarketingStrategy(List.of(socialMediaProfile4));
+        var marketingStrategy4 = new MarketingStrategy(List.of(socialMediaProfile5));
 
 
 

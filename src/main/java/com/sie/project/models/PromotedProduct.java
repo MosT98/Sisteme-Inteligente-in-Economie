@@ -19,11 +19,20 @@ public class PromotedProduct {
         this.name = name;
     }
 
+    public PromotedProduct(Instant expirationDate) {
+        this.expirationDate = expirationDate;
+    }
+
+    public PromotedProduct(String name) {
+        this.name = name;
+    }
+
     public PromotedProduct(ProductCategory category, Instant expirationDate, String name) {
         this.category = category;
         this.expirationDate = expirationDate;
         this.name = name;
     }
+
 
     public String getName() {
         return name;
