@@ -6,11 +6,8 @@ import org.kie.api.KieServices;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 
-import java.time.Duration;
 import java.time.Instant;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 public class Test {
@@ -22,6 +19,7 @@ public class Test {
         var targetAudience = new TargetAudience(MonthlyIncomeInterval.UNDER_1000);
         var targetAudience2 = new TargetAudience(AgeInterval.UNDER_18);
         var targetAudience3 = new TargetAudience(CareerStatus.STUDENT);
+        var targetAudience4 = new TargetAudience(AgeInterval.OLDER_THAN_50);
 
         var promotedProduct = new PromotedProduct(ProductCategory.UNKNOWN, Instant.parse("2021-11-20T00:00:00.00Z"), "NumeProdusPromovat");
         var promotedProduct2 = new PromotedProduct(ProductCategory.UNKNOWN, Instant.parse("2021-10-23T00:00:00.00Z"), "Nutella");
@@ -53,12 +51,15 @@ public class Test {
         var marketingStrategy2 = new MarketingStrategy(targetAudience3);
         var marketingStrategy3 = new MarketingStrategy(List.of(socialMediaProfile4));
         var marketingStrategy4 = new MarketingStrategy(List.of(socialMediaProfile5));
+        var marketingStrategy5 = new MarketingStrategy(123123, Instant.parse("2021-12-02T00:00:00.00Z"), Instant.parse("2021-12-23T00:00:00.00Z"));
+        var marketingStrategy6 = new MarketingStrategy(101010,targetAudience4);
 
-
+        var company = new Company(List.of(marketingStrategy6));
 
         kSession.insert(targetAudience);
         kSession.insert(targetAudience2);
         kSession.insert(targetAudience3);
+        kSession.insert(targetAudience4);
 
         kSession.insert(socialMediaProfile);
         kSession.insert(socialMediaProfile2);
@@ -80,6 +81,10 @@ public class Test {
         kSession.insert(marketingStrategy2);
         kSession.insert(marketingStrategy3);
         kSession.insert(marketingStrategy4);
+        kSession.insert(marketingStrategy5);
+        kSession.insert(marketingStrategy6);
+
+        kSession.insert(company);
 
         kSession.fireAllRules();
     }

@@ -14,6 +14,17 @@ public class MarketingStrategy {
 
     private Integer maximumNumberOfPromoters;
 
+    public MarketingStrategy(Integer allocatedBudget, Instant campaignStartDate, Instant campaignEndDate) {
+        this.allocatedBudget = allocatedBudget;
+        this.campaignStartDate = campaignStartDate;
+        this.campaignEndDate = campaignEndDate;
+    }
+
+    public MarketingStrategy(Integer allocatedBudget, TargetAudience targetAudience) {
+        this.allocatedBudget = allocatedBudget;
+        this.targetAudience = targetAudience;
+    }
+
     public MarketingStrategy(TargetAudience targetAudience) {
         this.targetAudience = targetAudience;
     }

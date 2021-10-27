@@ -6,7 +6,13 @@ import java.time.Instant
 import java.time.Duration
 import java.util.Date
 import java.text.SimpleDateFormat
-import java.time.ZoneId;
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.LocalDate
+import java.time.format.ResolverStyle
+import java.time.format.DateTimeParseException
+import java.util.stream.Stream
+import java.util.stream.Collectors;
 
 /*
 - formula pentru bugetul alocat in functie de kkturi
@@ -286,3 +292,91 @@ rule "Depending on the social platform, set the period of campaign"
         formatter.format(Date.from(marketingStrategy.getCampaignStartDate())),
         formatter.format(Date.from(marketingStrategy.getCampaignEndDate())));
 end
+
+// R14 verificare data campanie
+function boolean isValidDate(MarketingStrategy ms){
+    var startDate = ms.getCampaignStartDate();
+    var endDate = ms.getCampaignEndDate();
+    var today = Instant.now();
+
+    if (endDate.isBefore(startDate)){
+        return false;
+    }
+    else if(startDate.isBefore(today) || endDate.isBefore(today)){
+        return false;
+    }
+
+    return true;
+}
+
+rule "Check valid campaign date"
+    when
+        marketingStrategy:MarketingStrategy(allocatedBudget == 123123)
+    then
+        System.out.println("=====RULE 14=====");
+
+        var startDate = marketingStrategy.getCampaignStartDate();
+        var endDate = marketingStrategy.getCampaignEndDate();
+
+        if (isValidDate(marketingStrategy)){
+            if (startDate.isAfter(Instant.parse("2021-12-01T00:00:00.00Z")) && endDate.isBefore(Instant.parse("2021-12-31T00:00:00.00Z"))){
+                var targetAudienceWinter = new TargetAudience(AgeInterval.UNDER_18);
+                marketingStrategy.setTargetAudience(targetAudienceWinter);
+
+                System.out.printf("Deoarece campania e in timpul sarbatorilor de iarna, grupul tinta va fi %s.%n",
+                targetAudienceWinter.getAgeInterval().getValue());
+            }else if(startDate.isAfter(Instant.parse("2022-06-01T00:00:00.00Z")) && endDate.isBefore(Instant.parse("2022-09-31T00:00:00.00Z"))){
+                var targetAudienceSummer = new TargetAudience(AgeInterval.BETWEEN_18_AND_30);
+                marketingStrategy.setTargetAudience(targetAudienceSummer);
+
+                System.out.printf("Deoarece campania e in timpul verii, grupul tinta va fi %s.%n",
+                targetAudienceSummer.getAgeInterval().getValue());
+            }
+        }else{
+            System.out.println("Data introdusa nu este valida");
+        }
+end
+
+// R15
+rule "Verify that marketing strategies are not overalapping in a company"
+    when
+        targetAudience:TargetAudience(ageInterval == AgeInterval.OLDER_THAN_50)
+        marketingStrategy:MarketingStrategy(allocatedBudget == 101010, targetAudience == targetAudience)
+        company:Company(marketingStrategies == List.of(marketingStrategy))
+    then
+        System.out.println("=====RULE 15=====");
+
+        var newTargetAudience = new TargetAudience(AgeInterval.BETWEEN_30_AND_40);
+        var newMarketingStrategy = new MarketingStrategy(newTargetAudience);
+
+        var existingMarketingStrategies = company.getMarketingStrategies();
+
+        if (existingMarketingStrategies.isEmpty()){
+            company.setMarketingStrategies(List.of(newMarketingStrategy));
+        }
+
+        if (!existingMarketingStrategies.isEmpty()){
+            var nrOfElements = existingMarketingStrategies.size();
+            var lastElement = existingMarketingStrategies.get(nrOfElements - 1);
+
+            if (lastElement.getTargetAudience().getAgeInterval().getValue().equals(newMarketingStrategy.getTargetAudience().getAgeInterval().getValue())){
+                System.out.println("Exista deja un marketing strategy cu acelasi grup tinta, nu se poate crea altul");
+            }
+            else{
+                var newMarketingStrategyList = List.of(newMarketingStrategy);
+                var newMarketingStrategiesList = Stream.concat(existingMarketingStrategies.stream(), newMarketingStrategyList.stream()).collect(Collectors.toList());
+                company.setMarketingStrategies(newMarketingStrategiesList);
+                System.out.println("Strategia este diferita, deci a fost adaugata");
+            }
+        }
+end
+
+// R16
+//rule "Compute allocated budget based on maximum budget and "
+//when
+//    targetAudience:TargetAudience()
+//    marketingStrategy:MarketingStrategy(targetAudience == )
+//    company:Company(budget == 100000)
+//then
+//
+//end
