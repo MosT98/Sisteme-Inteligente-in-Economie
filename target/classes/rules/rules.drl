@@ -6,21 +6,22 @@ import java.time.Instant
 import java.time.Duration
 import java.util.Date
 import java.text.SimpleDateFormat
-import java.time.ZoneId;
-
-/*
-- formula pentru bugetul alocat in functie de kkturi
-- in functie de perioada campanie/promovare...
-
-promoted product impl product
-*/
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.LocalDate
+import java.time.format.ResolverStyle
+import java.time.format.DateTimeParseException
+import java.util.stream.Stream
+import java.util.stream.Collectors
+import java.time.temporal.ChronoUnit
+import java.time.ZoneOffset;
 
 // R1
 rule "Get career status by monthly income interval"
     when
         targetAudience:TargetAudience(monthlyIncomeInterval==MonthlyIncomeInterval.UNDER_1000)
     then
-        System.out.println("=====RULE 1=====");
+        System.out.println("\n=====RULE 1=====");
         targetAudience.setCareerStatus(CareerStatus.UNEMPLOYED);
         System.out.println("Deoarece target audience are salariul lunar in intervalul "
             + MonthlyIncomeInterval.UNDER_1000.getValue()
@@ -32,7 +33,7 @@ rule "Get career status by age interval"
     when
         targetAudience:TargetAudience(ageInterval==AgeInterval.UNDER_18)
     then
-        System.out.println("=====RULE 2=====");
+        System.out.println("\n=====RULE 2=====");
         targetAudience.setCareerStatus(CareerStatus.UNEMPLOYED);
         System.out.println("Deoarece target audience are varsta cuprinsa in intervalul "
             + AgeInterval.UNDER_18.getValue()
@@ -44,7 +45,7 @@ rule "Change minimum numbers of posts when number of followers is in certain int
     when
         socialMediaProfile:SocialMediaProfile(platform==SocialMediaPlatform.FACEBOOK)
     then
-        System.out.println("=====RULE 3=====");
+        System.out.println("\n=====RULE 3=====");
         Integer followersCount = socialMediaProfile.getFollowersCount();
         if(followersCount < 100) {
             socialMediaProfile.setMinimumPostsCountPerMonth(65);
@@ -64,7 +65,7 @@ rule "Change name depending on the media platform"
     when
         socialMediaProfile:SocialMediaProfile(platform==SocialMediaPlatform.INSTAGRAM)
     then
-        System.out.println("=====RULE 4=====");
+        System.out.println("\n=====RULE 4=====");
         var currentName = socialMediaProfile.getName();
         var platform = socialMediaProfile.getPlatform();
 
@@ -92,7 +93,7 @@ rule "Promote different products depending on platform"
         promotedProduct:PromotedProduct(name == "NumeProdusPromovat")
         promoter:Promoter(socialMediaProfiles == List.of(socialMediaProfile))
     then
-        System.out.println("=====RULE 5=====");
+        System.out.println("\n=====RULE 5=====");
         var platform = socialMediaProfile.getPlatform();
         if(platform.equals(SocialMediaPlatform.INSTAGRAM)) {
             promotedProduct.setCategory(ProductCategory.FITNESS);
@@ -119,7 +120,7 @@ rule "If expiration date is in the next 30 days, increase discount by 25%"
     when
         promotedProduct:PromotedProduct(name == "NumeProdusPromovat");
     then
-        System.out.println("=====RULE 6=====");
+        System.out.println("\n=====RULE 6=====");
 
         var currentInstant = Instant.now();
         var duration = Duration.between(currentInstant, promotedProduct.getExpirationDate());
@@ -141,7 +142,7 @@ rule "Making promotions on different categories depending on the period of time"
         promotedProduct:PromotedProduct(name == "Nutella")
         promoter:Promoter(socialMediaProfiles == List.of(socialMediaProfile))
     then
-        System.out.println("=====RULE 7=====");
+        System.out.println("\n=====RULE 7=====");
         var promotionStartDate = promoter.getPromotionStartDate();
         var promotionEndDate = promoter.getPromotionEndDate();
 
@@ -174,7 +175,7 @@ rule "Update name of a product if expiration date is exceeded"
     when
         promotedProduct:PromotedProduct(expirationDate == Instant.parse("2021-10-23T00:00:00.00Z"));
     then
-        System.out.println("=====RULE 8=====");
+        System.out.println("\n=====RULE 8=====");
 
         var currentName = promotedProduct.getName();
 
@@ -198,7 +199,7 @@ rule "Different discounts based on the period of the month"
         promotedProduct:PromotedProduct(name == "ProdusNou")
         promoter:Promoter(promotedProductList == List.of(promotedProduct))
     then
-        System.out.println("=====RULE 9=====");
+        System.out.println("\n=====RULE 9=====");
 
         var promotionStartDate = promoter.getPromotionStartDate();
         var dayFromPromotionStartDate = promotionStartDate.atZone(ZoneId.systemDefault()).getDayOfMonth();
@@ -226,7 +227,7 @@ rule "If student, receive bigger discount"
         promotedProduct:PromotedProduct(name == "Laptop")
         marketingStrategy:MarketingStrategy(targetAudience == targetAudience)
     then
-        System.out.println("=====RULE 10=====");
+        System.out.println("\n=====RULE 10=====");
 
         if (targetAudience.getCareerStatus().equals(CareerStatus.STUDENT)){
             promotedProduct.setDiscount(0.15);
@@ -242,7 +243,7 @@ rule "If under 18, receive bigger discount"
         promotedProduct:PromotedProduct(name == "Smartphone")
         marketingStrategy:MarketingStrategy(targetAudience == targetAudience)
     then
-        System.out.println("=====RULE 11=====");
+        System.out.println("\n=====RULE 11=====");
 
         if (targetAudience.getAgeInterval().equals(AgeInterval.UNDER_18)){
             promotedProduct.setDiscount(0.20);
@@ -257,7 +258,7 @@ rule "Depending on the number of followers, set maximum number of promoters"
         socialMediaProfile:SocialMediaProfile(followersCount == 15000, platform == SocialMediaPlatform.TWITTER)
         marketingStrategy:MarketingStrategy(socialMediaProfiles == List.of(socialMediaProfile))
     then
-        System.out.println("=====RULE 12=====");
+        System.out.println("\n=====RULE 12=====");
 
         var currentFollowersNumber = socialMediaProfile.getFollowersCount();
         var neededNumberOfPromoters = currentFollowersNumber / 2500; // <- for each 2500 followers we add another promoter
@@ -272,7 +273,7 @@ rule "Depending on the social platform, set the period of campaign"
         socialMediaProfile:SocialMediaProfile(platform == SocialMediaPlatform.TIKTOK)
         marketingStrategy:MarketingStrategy(socialMediaProfiles == List.of(socialMediaProfile))
     then
-        System.out.println("=====RULE 13=====");
+        System.out.println("\n=====RULE 13=====");
 
         if (socialMediaProfile.getPlatform().equals(SocialMediaPlatform.TIKTOK)){
             marketingStrategy.setCampaignStartDate(Instant.parse("2022-01-01T00:00:00.00Z"));
@@ -285,4 +286,180 @@ rule "Depending on the social platform, set the period of campaign"
         socialMediaProfile.getPlatform(),
         formatter.format(Date.from(marketingStrategy.getCampaignStartDate())),
         formatter.format(Date.from(marketingStrategy.getCampaignEndDate())));
+end
+
+// R14 verificare data campanie
+function boolean isValidDate(MarketingStrategy ms){
+    var startDate = ms.getCampaignStartDate();
+    var endDate = ms.getCampaignEndDate();
+    var today = Instant.now();
+
+    if (endDate.isBefore(startDate)){
+        return false;
+    }
+    else if(startDate.isBefore(today) || endDate.isBefore(today)){
+        return false;
+    }
+
+    return true;
+}
+
+rule "Check valid campaign date"
+    when
+        marketingStrategy:MarketingStrategy(allocatedBudget == 123123)
+    then
+        System.out.println("\n=====RULE 14=====");
+
+        var startDate = marketingStrategy.getCampaignStartDate();
+        var endDate = marketingStrategy.getCampaignEndDate();
+
+        if (isValidDate(marketingStrategy)){
+            if (startDate.isAfter(Instant.parse("2021-12-01T00:00:00.00Z")) && endDate.isBefore(Instant.parse("2021-12-31T00:00:00.00Z"))){
+                var targetAudienceWinter = new TargetAudience(AgeInterval.UNDER_18);
+                marketingStrategy.setTargetAudience(targetAudienceWinter);
+
+                System.out.printf("Deoarece campania e in timpul sarbatorilor de iarna, grupul tinta va fi %s.%n",
+                targetAudienceWinter.getAgeInterval().getValue());
+            }else if(startDate.isAfter(Instant.parse("2022-06-01T00:00:00.00Z")) && endDate.isBefore(Instant.parse("2022-09-31T00:00:00.00Z"))){
+                var targetAudienceSummer = new TargetAudience(AgeInterval.BETWEEN_18_AND_30);
+                marketingStrategy.setTargetAudience(targetAudienceSummer);
+
+                System.out.printf("Deoarece campania e in timpul verii, grupul tinta va fi %s.%n",
+                targetAudienceSummer.getAgeInterval().getValue());
+            }
+        }else{
+            System.out.println("Data introdusa nu este valida");
+        }
+end
+
+// R15
+rule "Verify that marketing strategies are not overalapping in a company"
+    when
+        targetAudience:TargetAudience(ageInterval == AgeInterval.OLDER_THAN_50)
+        marketingStrategy:MarketingStrategy(allocatedBudget == 101010, targetAudience == targetAudience)
+        company:Company(marketingStrategies == List.of(marketingStrategy))
+    then
+        System.out.println("\n=====RULE 15=====");
+
+        var newTargetAudience = new TargetAudience(AgeInterval.BETWEEN_30_AND_40);
+        var newMarketingStrategy = new MarketingStrategy(newTargetAudience);
+
+        var existingMarketingStrategies = company.getMarketingStrategies();
+
+        if (existingMarketingStrategies.isEmpty()) {
+            company.setMarketingStrategies(List.of(newMarketingStrategy));
+        }
+
+        if (!existingMarketingStrategies.isEmpty()) {
+            var nrOfElements = existingMarketingStrategies.size();
+            var lastElement = existingMarketingStrategies.get(nrOfElements - 1);
+
+            if (lastElement.getTargetAudience().getAgeInterval().getValue().equals(newMarketingStrategy.getTargetAudience().getAgeInterval().getValue())){
+                System.out.println("Exista deja un marketing strategy cu acelasi grup tinta, nu se poate crea altul");
+            }
+            else {
+                var newMarketingStrategyList = List.of(newMarketingStrategy);
+                var newMarketingStrategiesList = Stream.concat(existingMarketingStrategies.stream(), newMarketingStrategyList.stream()).collect(Collectors.toList());
+                company.setMarketingStrategies(newMarketingStrategiesList);
+                System.out.println("Strategia este diferita, deci a fost adaugata");
+            }
+        }
+end
+
+// R16
+rule "Set number of giveaways based on the follower count"
+    when
+        socialMediaProfile:SocialMediaProfile(name == "PaginaDeFacebook", followersCount == 145000)
+        marketingStrategy:MarketingStrategy(socialMediaProfiles == List.of(socialMediaProfile))
+    then
+        System.out.println("\n=====RULE 16=====");
+        int numberOfGiveaways = 1;
+        if (socialMediaProfile.getFollowersCount() < 1000) {
+            marketingStrategy.setNumberOfGiveaways(numberOfGiveaways);
+        } else if (socialMediaProfile.getFollowersCount() < 5000) {
+            marketingStrategy.setNumberOfGiveaways(numberOfGiveaways);
+        } else marketingStrategy.setNumberOfGiveaways(numberOfGiveaways);
+
+        System.out.printf("Profilul de social media %s are %d followeri, deci se vor organiza %d giveaways pe pagina in decursul campaniei de marketing.%n",
+            socialMediaProfile.getName(), socialMediaProfile.getFollowersCount(), numberOfGiveaways);
+end
+
+// R17
+rule "Verify that promotion period is included in the campaign period"
+    when
+        promoter:Promoter(name == "CCC")
+        marketingStrategy:MarketingStrategy(allocatedBudget == 55000)
+    then
+        System.out.println("\n=====RULE 17=====");
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+        var promoterStartDate = promoter.getPromotionStartDate();
+        var promoterEndDate = promoter.getPromotionEndDate();
+        var strategyStartDate = marketingStrategy.getCampaignStartDate();
+        var strategyEndDate = marketingStrategy.getCampaignEndDate();
+        if(promoterStartDate.isAfter(strategyStartDate) && promoterEndDate.isBefore(strategyEndDate)) {
+            System.out.printf("Perioada de promovare pentru promoter-ul %s (%s - %s) se incadreaza in perioada campaniei %s - %s.%n",
+                promoter.getName(), formatter.format(Date.from(promoterStartDate)), formatter.format(Date.from(promoterEndDate)),
+                formatter.format(Date.from(strategyStartDate)), formatter.format(Date.from(strategyEndDate)));
+        }
+end
+
+// R18
+rule "Compute allocated budget taking into consideration the social media platform"
+    when
+        socialMediaProfile:SocialMediaProfile(platform == SocialMediaPlatform.INSTAGRAM)
+        marketingStrategy:MarketingStrategy(socialMediaProfiles == List.of(socialMediaProfile))
+        company:Company(marketingStrategies == List.of(marketingStrategy))
+    then
+        System.out.println("\n=====RULE 18=====");
+        var allocatedBudget = 1500; // operational costs
+        switch(socialMediaProfile.getPlatform()) {
+            case INSTAGRAM:
+                allocatedBudget += 5000; break;
+            case FACEBOOK:
+                allocatedBudget += 4000; break;
+            case TIKTOK:
+                allocatedBudget += 3000; break;
+            case TWITTER:
+                allocatedBudget += 1000; break;
+            default: break;
+        }
+        System.out.println("Bugetul difera in functie de platforma de social media utilizata pentru a lansa campania. " +
+                         "Pentru campania curenta, platforma utilizata este " + socialMediaProfile.getPlatform() +
+                         " deci bugetul alocat va fi " + allocatedBudget + ".");
+end
+
+// R19
+rule "Increase budget by 500 for each allocated promoter."
+    when
+        promoter:Promoter(name == "DDD")
+        promoter2:Promoter(name == "EEE")
+        marketingStrategy:MarketingStrategy(allocatedBudget == 4500, promoters == List.of(promoter,promoter2))
+        company:Company(marketingStrategies == List.of(marketingStrategy))
+    then
+        System.out.println("\n=====RULE 19=====");
+        int promotersCount = marketingStrategy.getPromoters().size();
+        int currentAllocatedBudget = marketingStrategy.getAllocatedBudget();
+        int newAllocatedBudget = currentAllocatedBudget + (promotersCount * 500);
+        marketingStrategy.setAllocatedBudget(newAllocatedBudget);
+
+        System.out.printf("Pentru strategia curenta de marketing au fost alocati %d promoteri, deci bugetul va creste de la %d la %d.%n",
+                        promotersCount, currentAllocatedBudget, newAllocatedBudget);
+end
+
+// R20
+rule "Allocate budget depending on number of months in the campaign."
+    when
+        targetAudience:TargetAudience(ageInterval == AgeInterval.BETWEEN_30_AND_40)
+        marketingStrategy:MarketingStrategy(targetAudience == targetAudience)
+        company:Company(marketingStrategies == List.of(marketingStrategy))
+    then
+        System.out.println("\n=====RULE 20====");
+        int allocatedBudget = 1500; // initial budget for operating costs
+        LocalDate startDate = marketingStrategy.getCampaignStartDate().atZone(ZoneOffset.UTC).toLocalDate().withDayOfMonth(1);
+        LocalDate endDate = marketingStrategy.getCampaignEndDate().atZone(ZoneOffset.UTC).toLocalDate().withDayOfMonth(1);
+        int monthsBetween = (int) ChronoUnit.MONTHS.between(startDate, endDate);
+        allocatedBudget = allocatedBudget + (monthsBetween * 1000);
+        marketingStrategy.setAllocatedBudget(allocatedBudget);
+        System.out.printf("Strategia curenta de marketing dureaza %d luni, deci bugetul alocat va fi %d.%n",
+                            monthsBetween, allocatedBudget);
 end

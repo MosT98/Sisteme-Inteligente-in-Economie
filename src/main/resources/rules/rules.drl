@@ -16,13 +16,6 @@ import java.util.stream.Collectors
 import java.time.temporal.ChronoUnit
 import java.time.ZoneOffset;
 
-/*
-- formula pentru bugetul alocat in functie de kkturi
-- in functie de perioada campanie/promovare...
-
-promoted product impl product
-*/
-
 // R1
 rule "Get career status by monthly income interval"
     when
